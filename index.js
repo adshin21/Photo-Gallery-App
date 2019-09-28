@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 
-mongoose.connect("mongodb://localhost/codechef");
+mongoose.connect("mongodb://localhost/codechef",{ useNewUrlParser: true , useFindAndModify: false , useCreateIndex: true,  useUnifiedTopology: true });
 
 const UserController = require("./api/routes/User");
 
