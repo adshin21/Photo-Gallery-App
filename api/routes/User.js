@@ -16,7 +16,6 @@ router.post("/signup", async(req, res, next) => {
         return res.status(400).json({
             message: "User already exits"
         });
-        return;
     }
 
     let enc = await bcrypt.hash(password, 10, async(err, hash) => {
@@ -28,9 +27,8 @@ router.post("/signup", async(req, res, next) => {
 
             let NumberOfUsers = await User.findOne().sort({ _id: -1 });
             NumberOfUsers = NumberOfUsers._id;
-            console.log(NumberOfUsers);
 
-            if (NumberOfUsers === undefined)
+            if (NumberOfUsers === undefined || NumberOfUsers === null)
                 NumberOfUsers = 0
 
             User.create({
@@ -84,7 +82,6 @@ router.post("/login", async(req, res, next) => {
                 expiresIn: "2h"
             });
 
-            console.log(token);
             return res.status(200).json({
                 message: "User Logged in Succesfully",
                 token: token
