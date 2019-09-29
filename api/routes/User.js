@@ -26,10 +26,12 @@ router.post("/signup", async(req, res, next) => {
         } else {
 
             let NumberOfUsers = await User.findOne().sort({ _id: -1 });
-            NumberOfUsers = NumberOfUsers._id;
 
-            if (NumberOfUsers === undefined || NumberOfUsers === null)
-                NumberOfUsers = 0
+            if (NumberOfUsers === undefined || NumberOfUsers === null) {
+                NumberOfUsers = 0;
+            } else {
+                NumberOfUsers = NumberOfUsers._id;
+            }
 
             User.create({
                 username: username,
