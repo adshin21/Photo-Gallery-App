@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-    _id : {
+    _id: {
         type: Number,
         required: true,
         unique: true
@@ -17,11 +17,10 @@ const UserSchema = new mongoose.Schema({
     },
     albums: {
         type: Array,
-
     },
     time: {
         type: Date,
-        default: new Date() 
+        default: new Date()
     }
 });
 

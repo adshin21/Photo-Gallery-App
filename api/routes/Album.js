@@ -43,10 +43,11 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
 
     let NumberofAlbums = await Album.findOne().sort({ _id: -1 });
 
-    if (NumberofAlbums === undefined || NumberofAlbums === null)
+    if (NumberofAlbums === undefined || NumberofAlbums === null) {
         NumberofAlbums = 0;
-    else
+    } else {
         NumberofAlbums = NumberofAlbums._id;
+    }
 
     Album.create({
         _id: NumberofAlbums + 1,
@@ -61,13 +62,10 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
                 err
             });
         } else {
-            User.findOneAndUpdate({ _id: req.body.userData }, {
+            User.findOneAndUpdate({ _id: req.userData._id }, {
                 $push: {
                     "albums": NumberofAlbums + 1
                 },
-            }, {
-                safe: true,
-                upsert: true
             }, (error, data) => {
                 if (error) {
                     return res.status(404).json({
