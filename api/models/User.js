@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
+    _id : {
+        type: Number,
+        required: true,
+        unique: true
+    },
     username: {
         type: String,
         required: true,
@@ -13,6 +18,10 @@ const UserSchema = new mongoose.Schema({
     albums: {
         type: Array,
 
+    },
+    time: {
+        type: Date,
+        default: new Date() 
     }
 });
 

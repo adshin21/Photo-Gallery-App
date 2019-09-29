@@ -1,12 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const morgan = require("morgan");
 
-mongoose.connect("mongodb://localhost/codechef",{ useNewUrlParser: true , useFindAndModify: false , useCreateIndex: true,  useUnifiedTopology: true });
+mongoose.connect("mongodb://localhost/codechef", { useNewUrlParser: true, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true });
 
 const UserController = require("./api/routes/User");
 
 const app = express();
+
+app.use(morgan("dev"));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
