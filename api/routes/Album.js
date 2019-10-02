@@ -66,7 +66,7 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
         album_name: req.body.album_name,
         private: req.body.private,
         cover_photo: req.file.path,
-        creator: req.userData.id,
+        creator: req.req.userData.id,
     }, (err, album) => {
         if (err) {
             return res.status(404).json({
@@ -74,7 +74,7 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
                 err
             });
         } else {
-            User.findOneAndUpdate({ id: req.userData.id }, {
+            User.findOneAndUpdate({ id: req.req.userData.id }, {
                 $push: {
                     "albums": NumberofAlbums + 1
                 },
@@ -126,7 +126,7 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
     Photos.create({
         id: NumberofPhotos + 1,
         album_id: album_id,
-        destination: req.file.destination,
+        destination: req.file.path,
     }, async (err, data) => {
         if(err){
             return res.status(404).json({
@@ -155,4 +155,50 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
     });
 });
 
+
+router.get('/:album_name/like', auth,async (req, res, next) => {
+    
+    let Albumdata = await Album.findOne({album_name: req.params.album_name});
+    let like_user = await Albumdata.likes.includes(req.userData.id);
+    
+    if(like_user){
+        Album.findOneAndUpdate({id: Albumdata.id}, {
+            $pull: {
+                "likes": req.userData.id
+            }
+        }, (err, data) => {
+            if(err){
+                return res.status(404).json({
+                    message: "There is some issue in unliking"
+                });
+            }
+            else{
+                res.status(200).json({
+                    message: "Album Unliked successfully"
+                });
+                next();
+            }
+        });
+    }
+    else{
+        Album.findOneAndUpdate({id: Albumdata.id}, {
+            $push: {
+                "likes": req.userData.id
+            }
+        },(err, data) => {
+            if(err)
+                return res.status(404).json({
+                    message: "There is some issues in liking the album"
+                });
+            else{
+                res.status(200).json({
+                    message: "Album liked successfully"
+                });
+                next();
+            }
+        });
+    }
+
+
+});
 module.exports = router;
