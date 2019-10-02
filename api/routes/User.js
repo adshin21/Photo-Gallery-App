@@ -25,18 +25,18 @@ router.post("/signup", async(req, res, next) => {
             });
         } else {
 
-            let NumberOfUsers = await User.findOne().sort({ _id: -1 });
+            let NumberOfUsers = await User.findOne().sort({ id: -1 });
 
             if (NumberOfUsers === undefined || NumberOfUsers === null) {
                 NumberOfUsers = 0;
             } else {
-                NumberOfUsers = NumberOfUsers._id;
+                NumberOfUsers = NumberOfUsers.id;
             }
 
             User.create({
                 username: username,
                 password: hash,
-                _id: NumberOfUsers + 1
+                id: NumberOfUsers + 1
             }, (errors, user) => {
 
                 if (errors) {
@@ -79,7 +79,7 @@ router.post("/login", async(req, res, next) => {
         if (result) {
             const token = jwt.sign({
                 username: user[0].username,
-                _id: user[0]._id
+                id: user[0].id
             }, process.env.JWT_KEY, {
                 expiresIn: "2h"
             });

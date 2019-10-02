@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const AlbumSchema = mongoose.Schema({
-    _id: {
+    id: {
         type: Number,
         required: true,
         unique: true

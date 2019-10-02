@@ -1,22 +1,23 @@
 const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema({
-    id: {
+const PhotoSchema = mongoose.Schema({
+    id:{
         type: Number,
         required: true,
         unique: true
     },
-    username: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
+    album_id: {
+        type: Number,
         required: true
     },
-    albums: {
-        type: Array,
+    image_name: {
+        type: String,
+    },
+    destination: {
+        type: String,
+    },
+    likes: {
+        type: Array
     },
     time: {
         type: Date,
@@ -24,4 +25,4 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("Photo", PhotoSchema);
