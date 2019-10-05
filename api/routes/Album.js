@@ -198,7 +198,44 @@ router.get('/:album_name/like', auth,async (req, res, next) => {
             }
         });
     }
-
-
 });
+
+router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
+    console.log(req.params);
+    const image = await Photos.findOne({id: req.params.image_id});
+    
+    if(image === null || image === undefined){
+        return res.status(404).json({
+            message: "Image not found"
+        });
+    }
+
+    Photos.findByIdAndRemove({_id: image._id}, (err,data) => {
+        if(err){
+            return res.status(404).json({
+                message: "The image cannot be removed / image not found"
+            });
+        }
+        else{
+            Album.findOneAndUpdate({album_name: req.body.album_name}, {
+                $pull: {
+                    "photos": req.body.image_id
+                }
+            }, (error, dataa) => {
+                if(error){
+                    return res.status(404).json({
+                        message: "The picture is not completly removed"
+                    });
+                }
+                else{
+                    res.status(200).json({
+                        message: "Image removed successfully",
+                    });
+                    next();
+                }
+            });
+        }
+    })
+});
+
 module.exports = router;
