@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const auth = require("../middleware/auth");
 const Album = require("../models/Album");
@@ -11,13 +12,13 @@ const Photos = require("../models/Photos");
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         let new_path = "";
-        console.log(req.originalUrl);
+        // console.log(req.originalUrl);
         if (req.originalUrl === "/album/create")
             new_path = path.resolve(__dirname, "..", "..", "public/cover-photo");
         else
             new_path = path.resolve(__dirname, "..", "..", "public/image");
 
-        console.log(new_path);
+        // console.log(new_path);
         cb(null,new_path);
     },
     filename: (req, file, cb) => {
@@ -52,21 +53,12 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
             message: "Album name is already exists"
         });
     }
-
-    let NumberofAlbums = await Album.findOne().sort({ id: -1 });
-
-    if (NumberofAlbums === undefined || NumberofAlbums === null) {
-        NumberofAlbums = 0;
-    } else {
-        NumberofAlbums = NumberofAlbums.id;
-    }
-
+    
     Album.create({
-        id: NumberofAlbums + 1,
         album_name: req.body.album_name,
         private: req.body.private,
         cover_photo: req.file.path,
-        creator: req.req.userData.id,
+        creator: req.userData._id,
     }, (err, album) => {
         if (err) {
             return res.status(404).json({
@@ -74,9 +66,9 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
                 err
             });
         } else {
-            User.findOneAndUpdate({ id: req.req.userData.id }, {
+            User.findOneAndUpdate({ _id: req.userData._id }, {
                 $push: {
-                    "albums": NumberofAlbums + 1
+                    "albums": album._id
                 },
             }, (error, data) => {
                 if (error) {
@@ -96,7 +88,7 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
 });
 
 router.get("/:album_name", async(req, res, next) => {
-    const data = await Album.find({ album_name: req.params.album_name }).sort({ id: -1 });
+    const data = await Album.find({ album_name: req.params.album_name }).sort({ _id: -1 });
     if (data) {
         res.status(200).json({
             message: "This is working fine",
@@ -113,35 +105,28 @@ router.get("/:album_name", async(req, res, next) => {
 
 router.post("/:album_name/add", auth, upload.single("image"), async(req, res, next) => {
 
-    let NumberofPhotos = await Photos.findOne().sort({id: -1});
-
-    if(NumberofPhotos === undefined || NumberofPhotos === null)
-        NumberofPhotos = 0
-    else
-        NumberofPhotos = NumberofPhotos.id;
-
     const album = await Album.findOne({album_name: req.params.album_name});
-    const album_id = album.id;
-
+    
     Photos.create({
-        id: NumberofPhotos + 1,
-        album_id: album_id,
+        album_id: album._id,
         destination: req.file.path,
-    }, async (err, data) => {
+    }, (err, data) => {
         if(err){
             return res.status(404).json({
-                message: "There is an issue in adding the photos"
+                message: "There is an issue in adding the photos",
+                err
             });
         }
         else{
-            Album.findOneAndUpdate({id: album_id},{
+            Album.findOneAndUpdate({_id: album._id},{
                 $push:{
-                    "photos": NumberofPhotos + 1
+                    "photos": data._id
                 }
-            }, (error, data) => {
+            }, (error, dataa) => {
                 if(error){
                     return res.status(404).json({
-                        message: "Oops there is an issue"
+                        message: "Oops there is an issue",
+                        err
                     });
                 }
                 else{
@@ -159,12 +144,12 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
 router.get('/:album_name/like', auth,async (req, res, next) => {
     
     let Albumdata = await Album.findOne({album_name: req.params.album_name});
-    let like_user = await Albumdata.likes.includes(req.userData.id);
+    let like_user = await Albumdata.likes.includes(req.userData._id);
     
     if(like_user){
-        Album.findOneAndUpdate({id: Albumdata.id}, {
+        Album.findOneAndUpdate({_id: Albumdata._id}, {
             $pull: {
-                "likes": req.userData.id
+                "likes": req.userData._id
             }
         }, (err, data) => {
             if(err){
@@ -181,9 +166,9 @@ router.get('/:album_name/like', auth,async (req, res, next) => {
         });
     }
     else{
-        Album.findOneAndUpdate({id: Albumdata.id}, {
+        Album.findOneAndUpdate({_id: Albumdata._id}, {
             $push: {
-                "likes": req.userData.id
+                "likes": req.userData._id
             }
         },(err, data) => {
             if(err)
@@ -202,8 +187,10 @@ router.get('/:album_name/like', auth,async (req, res, next) => {
 
 router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
     console.log(req.params);
-    const image = await Photos.findOne({id: req.params.image_id});
-    
+    const _id = mongoose.Types.ObjectId(req.params.image_id);
+    console.log(_id);
+    const image = await Photos.findOne({_id: mongoose.Types.ObjectId(req.params.image_id)});
+    console.log(image);
     if(image === null || image === undefined){
         return res.status(404).json({
             message: "Image not found"
@@ -221,10 +208,11 @@ router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
                 $pull: {
                     "photos": req.body.image_id
                 }
-            }, (error, dataa) => {
+            }, (error, data) => {
                 if(error){
                     return res.status(404).json({
-                        message: "The picture is not completly removed"
+                        message: "The picture is not completly removed",
+                        error
                     });
                 }
                 else{

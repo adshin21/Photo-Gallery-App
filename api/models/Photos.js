@@ -1,13 +1,8 @@
 const mongoose = require("mongoose");
 
 const PhotoSchema = mongoose.Schema({
-    id:{
-        type: Number,
-        required: true,
-        unique: true
-    },
     album_id: {
-        type: Number,
+        type: mongoose.Types.ObjectId,
         required: true
     },
     image_name: {
