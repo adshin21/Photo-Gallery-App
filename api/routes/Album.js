@@ -26,6 +26,7 @@ const storage = multer.diskStorage({
 
 });
 
+
 const fileFilter = (req, file, cb) => {
     if (file.mimetype === "image/jpeg" || file.mimetype === "image/png" || file.mimetype === "image/jpg") {
         cb(null, true);
@@ -33,6 +34,7 @@ const fileFilter = (req, file, cb) => {
         cb(null, false);
     }
 }
+
 
 const upload = multer({
     storage: storage,
@@ -85,6 +87,7 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
         }
     });
 });
+
 
 router.get("/:album_name", async(req, res, next) => {
     const data = await Album.find({ album_name: req.params.album_name }).sort({ _id: -1 });
@@ -183,6 +186,7 @@ router.get('/:album_name/like', auth,async (req, res, next) => {
         });
     }
 });
+
 
 router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
     
