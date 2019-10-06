@@ -12,13 +12,12 @@ const Photos = require("../models/Photos");
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         let new_path = "";
-        // console.log(req.originalUrl);
+        
         if (req.originalUrl === "/album/create")
             new_path = path.resolve(__dirname, "..", "..", "public/cover-photo");
         else
             new_path = path.resolve(__dirname, "..", "..", "public/image");
 
-        // console.log(new_path);
         cb(null,new_path);
     },
     filename: (req, file, cb) => {
@@ -186,11 +185,9 @@ router.get('/:album_name/like', auth,async (req, res, next) => {
 });
 
 router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
-    console.log(req.params);
-    const _id = mongoose.Types.ObjectId(req.params.image_id);
-    console.log(_id);
+    
     const image = await Photos.findOne({_id: mongoose.Types.ObjectId(req.params.image_id)});
-    console.log(image);
+    
     if(image === null || image === undefined){
         return res.status(404).json({
             message: "Image not found"
@@ -225,5 +222,62 @@ router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
         }
     })
 });
+
+
+router.delete("/:album_id", auth, async (req, res, next) => {
+
+    const album = await Album.findOne({_id: mongoose.Types.ObjectId(req.params.album_id)});
+    console.log(album);
+    let x = 0;
+
+    for(let image in album.photos){
+        Album.findByIdAndUpdate({_id: album._id}, {
+            $pull: {
+                "photos": image
+            }
+        }, (err, data) => {
+            if(err){
+                return res.status(404).json({
+                    message: "There is a problem in deleting the Album",
+                    err
+                });
+            }
+            else{
+                x = image;
+                Photos.findByIdAndRemove({_id: mongoose.Types.ObjectId(album.photos[image])}, (err) => {
+                    if(err){
+                        return res.status(404).json({
+                            message: "The album is not removed"
+                        });
+                    }
+                });
+            }
+        });
+    }
+    console.log(x);
+    if(x === album.photos.length){
+
+        Album.findByIdAndRemove({_id: mongoose.Types.ObjectId(req.params.album_id)}, (err) => {
+            if(err){
+                return res.status(200).json({
+                    message: "Album not removed",
+                    err
+                });
+            }
+            else{
+                res.status(200).json({
+                    message: "The album has removed successfully"
+                });
+                next();
+            }
+        })
+    }
+    else{
+        return res.status(404).json({
+            message: "Album not removed"
+        });
+    }
+});
+
 
 module.exports = router;
