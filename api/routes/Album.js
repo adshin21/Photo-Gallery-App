@@ -231,7 +231,7 @@ router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
 router.delete("/:album_id", auth, async (req, res, next) => {
 
     const album = await Album.findOne({_id: mongoose.Types.ObjectId(req.params.album_id)});
-    console.log(album);
+    
     let x = 0;
 
     for(let image in album.photos){
@@ -258,7 +258,7 @@ router.delete("/:album_id", auth, async (req, res, next) => {
             }
         });
     }
-    console.log(x);
+    
     if(x === album.photos.length){
 
         Album.findByIdAndRemove({_id: mongoose.Types.ObjectId(req.params.album_id)}, (err) => {
