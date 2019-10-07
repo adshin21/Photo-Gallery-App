@@ -233,34 +233,19 @@ router.delete("/:album_id", auth, async (req, res, next) => {
     const album = await Album.findOne({_id: mongoose.Types.ObjectId(req.params.album_id)});
     
     let x = 0;
-
-    for(let image in album.photos){
-        Album.findByIdAndUpdate({_id: album._id}, {
-            $pull: {
-                "photos": image
-            }
-        }, (err, data) => {
+    for (let image in album.photos){
+        Photos.findByIdAndRemove({_id: mongoose.Types.ObjectId(album.photos[image])}, (err) => {
             if(err){
                 return res.status(404).json({
-                    message: "There is a problem in deleting the Album",
+                    message: "The album is not removed",
                     err
                 });
             }
-            else{
-                x = image;
-                Photos.findByIdAndRemove({_id: mongoose.Types.ObjectId(album.photos[image])}, (err) => {
-                    if(err){
-                        return res.status(404).json({
-                            message: "The album is not removed"
-                        });
-                    }
-                });
-            }
+            x++;
         });
     }
-    
-    if(x === album.photos.length){
 
+    if(x === album.photos.length && x){
         Album.findByIdAndRemove({_id: mongoose.Types.ObjectId(req.params.album_id)}, (err) => {
             if(err){
                 return res.status(200).json({
@@ -274,13 +259,14 @@ router.delete("/:album_id", auth, async (req, res, next) => {
                 });
                 next();
             }
-        })
+        });
     }
     else{
         return res.status(404).json({
             message: "Album not removed"
         });
     }
+    
 });
 
 
