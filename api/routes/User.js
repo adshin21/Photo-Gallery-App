@@ -89,6 +89,15 @@ router.post("/login", async(req, res, next) => {
     });
 });
 
+router.get(":/logout", auth, (req, res, next) => {
+    req.userData = null;
+
+    res.status(200).json({
+        message: "Logout Succesfully"
+    });
+    next();
+});
+
 router.delete("/:username", auth, async (req, res, next) => {
     
     const removeAlbumPhotos = async (album,image) => {
