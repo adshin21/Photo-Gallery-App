@@ -5,6 +5,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 
 const auth = require("../middleware/auth");
+const modauth = require("../middleware/modified_auth");
 const Albums = require("../models/Album");
 const Users = require("../models/User");
 const Photos = require("../models/Photos");
@@ -89,11 +90,18 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
 });
 
 
-router.get("/:album_name", async(req, res, next) => {
-    const data = await Albums.find({ album_name: req.params.album_name }).sort({ _id: -1 });
-    if (data) {
+router.get("/:album_name", modauth, async(req, res, next) => {
+
+    let data;
+    if(req.login)
+        data = await Albums.find({ album_name: req.params.album_name, creator: req.userData._id }).sort({ _id: -1 });
+    else{
+        data = await Albums.find({ album_name: req.params.album_name}).sort({_id: -1});
+    }
+
+    if (data.length >= 1) {
         res.status(200).json({
-            message: "This is working fine",
+            message: "There is the list of albums",
             data: data
         });
     } else {
@@ -108,6 +116,12 @@ router.get("/:album_name", async(req, res, next) => {
 router.post("/:album_name/add", auth, upload.single("image"), async(req, res, next) => {
 
     const album = await Albums.findOne({album_name: req.params.album_name});
+    
+    if(req.userData._id !== album.creator){
+        return res.status(404).json({
+            message: "Album is not belongs to you"
+        });
+    }
     
     Photos.create({
         album_id: album._id,
@@ -143,10 +157,10 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
 });
 
 
-router.get('/:album_name/like', auth,async (req, res, next) => {
+router.get('/:album_name/like', auth, async (req, res, next) => {
     
-    let Albumdata = await Albums.findOne({album_name: req.params.album_name});
-    let like_user = await Albumdata.likes.includes(req.userData._id);
+    const Albumdata = await Albums.findOne({album_name: req.params.album_name});
+    const like_user = await Albumdata.likes.includes(req.userData._id);
     
     if(like_user){
         Albums.findOneAndUpdate({_id: Albumdata._id}, {
@@ -190,7 +204,16 @@ router.get('/:album_name/like', auth,async (req, res, next) => {
 
 router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
     
+    const ok = await Albums.find({album_name: req.params.album_name});
+    
+    if(ok.creator !== req.userData._id){
+        return res.status(404).json({
+            message: "The album is not belongs to you"
+        });
+    }
+
     const image = await Photos.findOne({_id: mongoose.Types.ObjectId(req.params.image_id)});
+
     
     if(image === null || image === undefined){
         return res.status(404).json({
@@ -252,6 +275,12 @@ router.delete("/:album_id", auth, async (req, res, next) => {
 
     const album = await Albums.findOne({_id: mongoose.Types.ObjectId(req.params.album_id)});
 
+    if(req.userData._id !== album.creator){
+        return res.status(404).json({
+            message: "The album is not belong to you"
+        });
+    }
+
     if(!album){
         return res.status(404).json({
             message: "There Album not find"
@@ -263,8 +292,9 @@ router.delete("/:album_id", auth, async (req, res, next) => {
         let result = await removeAlbumPhotos(album,image);
         if(result.status){
             x++;
-        }else{
-            //TODO if return on 1 failure or something else you want 
+        }
+        else{
+            // TODO if return on 1 failure or something else you want 
             return res.status(404).json(result);
         }
     }

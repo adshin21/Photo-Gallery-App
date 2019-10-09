@@ -140,6 +140,14 @@ router.delete("/:username", auth, async (req, res, next) => {
             });
         });
     }
+    
+    const user = Users.findOne({_id: mongoose.Types.ObjectId(req.userData._id)});
+
+    if(user.username !== req.params.username){
+        return res.status(404).json({
+            message: "The user is not belongs to you"
+        });
+    }
 
     const albums = await Albums.find({creator: mongoose.Types.ObjectId(req.userData._id)});
 
