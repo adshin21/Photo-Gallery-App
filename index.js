@@ -7,7 +7,8 @@ mongoose.connect("mongodb://localhost/codechef", { useNewUrlParser: true, useFin
 
 const UserController = require("./api/routes/User");
 const AlbumController = require("./api/routes/Album");
-const auth = require("./api/middleware/auth");
+const ShareController = require("./api/routes/Share");
+
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.static('public'));
 
 app.use("/user", UserController);
 app.use("/album", AlbumController);
+app.use("/share", ShareController);
 
 app.listen(5000, () => {
     console.log(`Server is listening on http://localhost:${5000}`);

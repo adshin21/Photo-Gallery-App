@@ -89,6 +89,7 @@ router.post("/login", async(req, res, next) => {
     });
 });
 
+
 router.get(":/logout", auth, (req, res, next) => {
     req.userData = null;
 
@@ -97,6 +98,7 @@ router.get(":/logout", auth, (req, res, next) => {
     });
     next();
 });
+
 
 router.delete("/:username", auth, async (req, res, next) => {
     

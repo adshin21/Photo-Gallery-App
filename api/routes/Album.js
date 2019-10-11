@@ -13,13 +13,13 @@ const Photos = require("../models/Photos");
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         let new_path = "";
-        
+
         if (req.originalUrl === "/album/create")
             new_path = path.resolve(__dirname, "..", "..", "public/cover-photo");
         else
             new_path = path.resolve(__dirname, "..", "..", "public/image");
 
-        cb(null,new_path);
+        cb(null, new_path);
     },
     filename: (req, file, cb) => {
         cb(null, new Date().toISOString() + file.originalname);
@@ -55,7 +55,7 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
             message: "Album name is already exists"
         });
     }
-    
+
     Albums.create({
         album_name: req.body.album_name,
         private: req.body.private,
@@ -93,10 +93,10 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
 router.get("/:album_name", modauth, async(req, res, next) => {
 
     let data;
-    if(req.login)
+    if (req.login)
         data = await Albums.find({ album_name: req.params.album_name, creator: req.userData._id }).sort({ _id: -1 });
-    else{
-        data = await Albums.find({ album_name: req.params.album_name}).sort({_id: -1});
+    else {
+        data = await Albums.find({ album_name: req.params.album_name }).sort({ _id: -1 });
     }
 
     if (data.length >= 1) {
@@ -115,37 +115,35 @@ router.get("/:album_name", modauth, async(req, res, next) => {
 
 router.post("/:album_name/add", auth, upload.single("image"), async(req, res, next) => {
 
-    const album = await Albums.findOne({album_name: req.params.album_name});
-    
-    if(req.userData._id !== album.creator){
+    const album = await Albums.findOne({ album_name: req.params.album_name });
+
+    if (req.userData._id != album.creator) {
         return res.status(404).json({
             message: "Album is not belongs to you"
         });
     }
-    
+
     Photos.create({
         album_id: album._id,
         destination: req.file.path,
     }, (err, data) => {
-        if(err){
+        if (err) {
             return res.status(404).json({
                 message: "There is an issue in adding the photos",
                 err
             });
-        }
-        else{
-            Albums.findOneAndUpdate({_id: album._id},{
-                $push:{
+        } else {
+            Albums.findOneAndUpdate({ _id: album._id }, {
+                $push: {
                     "photos": data._id
                 }
             }, (error, dataa) => {
-                if(error){
+                if (error) {
                     return res.status(404).json({
                         message: "Oops there is an issue",
                         err
                     });
-                }
-                else{
+                } else {
                     res.status(200).json({
                         message: "Successfully Added the photo in the Album"
                     });
@@ -157,41 +155,39 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
 });
 
 
-router.get('/:album_name/like', auth, async (req, res, next) => {
-    
-    const Albumdata = await Albums.findOne({album_name: req.params.album_name});
+router.get('/:album_name/like', auth, async(req, res, next) => {
+
+    const Albumdata = await Albums.findOne({ album_name: req.params.album_name });
     const like_user = await Albumdata.likes.includes(req.userData._id);
-    
-    if(like_user){
-        Albums.findOneAndUpdate({_id: Albumdata._id}, {
+
+    if (like_user) {
+        Albums.findOneAndUpdate({ _id: Albumdata._id }, {
             $pull: {
                 "likes": req.userData._id
             }
         }, (err, data) => {
-            if(err){
+            if (err) {
                 return res.status(404).json({
                     message: "There is some issue in unliking"
                 });
-            }
-            else{
+            } else {
                 res.status(200).json({
                     message: "Album Unliked successfully"
                 });
                 next();
             }
         });
-    }
-    else{
-        Albums.findOneAndUpdate({_id: Albumdata._id}, {
+    } else {
+        Albums.findOneAndUpdate({ _id: Albumdata._id }, {
             $push: {
                 "likes": req.userData._id
             }
-        },(err, data) => {
-            if(err)
+        }, (err, data) => {
+            if (err)
                 return res.status(404).json({
                     message: "There is some issues in liking the album"
                 });
-            else{
+            else {
                 res.status(200).json({
                     message: "Album liked successfully"
                 });
@@ -202,44 +198,42 @@ router.get('/:album_name/like', auth, async (req, res, next) => {
 });
 
 
-router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
-    
-    const ok = await Albums.find({album_name: req.params.album_name});
-    
-    if(ok.creator !== req.userData._id){
+router.delete("/:album_name/:image_id", auth, async(req, res, next) => {
+
+    const ok = await Albums.find({ album_name: req.params.album_name });
+
+    if (ok.creator !== req.userData._id) {
         return res.status(404).json({
             message: "The album is not belongs to you"
         });
     }
 
-    const image = await Photos.findOne({_id: mongoose.Types.ObjectId(req.params.image_id)});
+    const image = await Photos.findOne({ _id: mongoose.Types.ObjectId(req.params.image_id) });
 
-    
-    if(image === null || image === undefined){
+
+    if (image === null || image === undefined) {
         return res.status(404).json({
             message: "Image not found"
         });
     }
 
-    Photos.findByIdAndRemove({_id: image._id}, (err,data) => {
-        if(err){
+    Photos.findByIdAndRemove({ _id: image._id }, (err, data) => {
+        if (err) {
             return res.status(404).json({
                 message: "The image cannot be removed / image not found"
             });
-        }
-        else{
-            Albums.findOneAndUpdate({album_name: req.body.album_name}, {
+        } else {
+            Albums.findOneAndUpdate({ album_name: req.body.album_name }, {
                 $pull: {
                     "photos": req.body.image_id
                 }
             }, (error, data) => {
-                if(error){
+                if (error) {
                     return res.status(404).json({
                         message: "The picture is not completly removed",
                         error
                     });
-                }
-                else{
+                } else {
                     res.status(200).json({
                         message: "Image removed successfully",
                     });
@@ -251,18 +245,18 @@ router.delete("/:album_name/:image_id", auth, async (req, res, next) => {
 });
 
 
-router.delete("/:album_id", auth, async (req, res, next) => {
+router.delete("/:album_id", auth, async(req, res, next) => {
 
-    const removeAlbumPhotos = async (album,image) => {
-        return new Promise((resolve,reject)=>{
-            Photos.findByIdAndRemove({_id: mongoose.Types.ObjectId(album.photos[image])}, (err) => {
-                if(err){
+    const removeAlbumPhotos = async(album, image) => {
+        return new Promise((resolve, reject) => {
+            Photos.findByIdAndRemove({ _id: mongoose.Types.ObjectId(album.photos[image]) }, (err) => {
+                if (err) {
                     return resolve({
                         status: false,
                         message: "The album is not removed",
                         err
-                    });   
-                }else{
+                    });
+                } else {
                     return resolve({
                         status: true,
                         message: 'Album photos removed',
@@ -273,49 +267,46 @@ router.delete("/:album_id", auth, async (req, res, next) => {
         });
     }
 
-    const album = await Albums.findOne({_id: mongoose.Types.ObjectId(req.params.album_id)});
+    const album = await Albums.findOne({ _id: mongoose.Types.ObjectId(req.params.album_id) });
 
-    if(req.userData._id !== album.creator){
+    if (req.userData._id !== album.creator) {
         return res.status(404).json({
             message: "The album is not belong to you"
         });
     }
 
-    if(!album){
+    if (!album) {
         return res.status(404).json({
             message: "There Album not find"
         });
     }
 
     let x = 0;
-    for (let image in album.photos){
-        let result = await removeAlbumPhotos(album,image);
-        if(result.status){
+    for (let image in album.photos) {
+        let result = await removeAlbumPhotos(album, image);
+        if (result.status) {
             x++;
-        }
-        else{
+        } else {
             // TODO if return on 1 failure or something else you want 
             return res.status(404).json(result);
         }
     }
 
-    if(x === album.photos.length && x){
-        Albums.findByIdAndRemove({_id: mongoose.Types.ObjectId(req.params.album_id)}, (err) => {
-            if(err){
+    if (x === album.photos.length && x) {
+        Albums.findByIdAndRemove({ _id: mongoose.Types.ObjectId(req.params.album_id) }, (err) => {
+            if (err) {
                 return res.status(200).json({
                     message: "Album not removed",
                     err
                 });
-            }
-            else{
+            } else {
                 res.status(200).json({
                     message: "The album has removed successfully"
                 });
                 next();
             }
         });
-    }
-    else{
+    } else {
         return res.status(404).json({
             message: "Album not removed"
         });
