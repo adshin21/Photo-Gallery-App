@@ -48,11 +48,17 @@ const upload = multer({
 
 router.post("/create", auth, upload.single("cover-photo"), async(req, res, next) => {
 
-    let album = await Albums.findOne({ album_name: req.body.album_name, private: req.body.private });
+    const album = await Albums.findOne({ album_name: req.body.album_name, private: req.body.private });
 
     if (album) {
         return res.status(404).json({
             message: "Album name is already exists"
+        });
+    }
+
+    if (req.body.album_name === null || req.body.album_name === undefined || req.file === null || req.file === undefined || req.private === null || req.private === undefined) {
+        return res.status(404).json({
+            message: "There is something missing, so that request can not proceed furthur"
         });
     }
 
@@ -120,6 +126,12 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
     if (req.userData._id != album.creator) {
         return res.status(404).json({
             message: "Album is not belongs to you"
+        });
+    }
+
+    if (req.file === undefined || req.file === null) {
+        return res.status(404).json({
+            message: "Please select a file"
         });
     }
 
@@ -292,7 +304,7 @@ router.delete("/:album_id", auth, async(req, res, next) => {
         }
     }
 
-    if (x === album.photos.length && x) {
+    if ((x === album.photos.length && x) || (album.length <= 0)) {
         Albums.findByIdAndRemove({ _id: mongoose.Types.ObjectId(req.params.album_id) }, (err) => {
             if (err) {
                 return res.status(200).json({

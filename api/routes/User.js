@@ -13,11 +13,32 @@ router.post("/signup", async(req, res, next) => {
     const username = req.body.username;
     const password = req.body.password;
 
+    if (username.length < 4) {
+        return res.status(404).json({
+            message: "The username is too short"
+        });
+    }
+
     let user = await Users.findOne({ username: username });
 
     if (user) {
         return res.status(400).json({
             message: "User already exits"
+        });
+    }
+
+    const password_regex = new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
+
+    if (password_regex.test(password) === false) {
+        return res.status(404).json({
+            message: "The passowrd does not follow the minimum requirements",
+            requirements: [
+                "At least one upper case English letter",
+                "At least one lower case English letter",
+                "At least one digit",
+                "At least one special character",
+                "Minimum eight in length"
+            ]
         });
     }
 
@@ -42,7 +63,6 @@ router.post("/signup", async(req, res, next) => {
                     res.status(200).json({
                         message: "All Good and User has been created"
                     });
-
                     next();
                 }
             });
@@ -90,28 +110,18 @@ router.post("/login", async(req, res, next) => {
 });
 
 
-router.get(":/logout", auth, (req, res, next) => {
-    req.userData = null;
+router.delete("/:username", auth, async(req, res, next) => {
 
-    res.status(200).json({
-        message: "Logout Succesfully"
-    });
-    next();
-});
-
-
-router.delete("/:username", auth, async (req, res, next) => {
-    
-    const removeAlbumPhotos = async (album,image) => {
-        return new Promise((resolve,reject)=>{
-            Photos.findByIdAndRemove({_id: mongoose.Types.ObjectId(album.photos[image])}, (err) => {
-                if(err){
+    const removeAlbumPhotos = async(album, image) => {
+        return new Promise((resolve, reject) => {
+            Photos.findByIdAndRemove({ _id: mongoose.Types.ObjectId(album.photos[image]) }, (err) => {
+                if (err) {
                     return resolve({
                         status: false,
                         message: "The photo is not removed",
                         err
-                    });   
-                }else{
+                    });
+                } else {
                     return resolve({
                         status: true,
                         message: 'Album photos removed',
@@ -122,17 +132,16 @@ router.delete("/:username", auth, async (req, res, next) => {
         });
     }
 
-    const removeAlbum = async (album) => {
-        return new Promise((resolve,reject) => {
-            Albums.findByIdAndRemove({_id: album._id}, (err) => {
-                if(err){
+    const removeAlbum = async(album) => {
+        return new Promise((resolve, reject) => {
+            Albums.findByIdAndRemove({ _id: album._id }, (err) => {
+                if (err) {
                     return resolve({
                         status: false,
                         message: "The album is not removed",
                         err
                     });
-                }
-                else{
+                } else {
                     return resolve({
                         status: true,
                         message: "The album has been removed",
@@ -142,38 +151,37 @@ router.delete("/:username", auth, async (req, res, next) => {
             });
         });
     }
-    
-    const user = Users.findOne({_id: mongoose.Types.ObjectId(req.userData._id)});
 
-    if(user.username !== req.params.username){
+    const user = Users.findOne({ _id: mongoose.Types.ObjectId(req.userData._id) });
+
+    if (user.username != req.params.username || !user) {
         return res.status(404).json({
-            message: "The user is not belongs to you"
+            message: "You are not the user intended"
         });
     }
 
-    const albums = await Albums.find({creator: mongoose.Types.ObjectId(req.userData._id)});
+    const albums = await Albums.find({ creator: mongoose.Types.ObjectId(req.userData._id) });
 
     let number_of_albums = 0;
 
-    for(let i in albums){
-        const album = await Albums.findOne({_id: albums[i]._id});
-        for(let j in album.photos){
-            let result = await removeAlbumPhotos(album,j);
+    for (let i in albums) {
+        const album = await Albums.findOne({ _id: albums[i]._id });
+        for (let j in album.photos) {
+            let result = await removeAlbumPhotos(album, j);
 
-            if(!result.status){
+            if (!result.status) {
                 return res.status(404).json({
-                   err: result.err,
-                   message: result.msg
+                    err: result.err,
+                    message: result.msg
                 });
             }
         }
 
         let result = await removeAlbum(album);
 
-        if(result.status){
+        if (result.status) {
             number_of_albums++;
-        }
-        else{
+        } else {
             return res.status(404).json({
                 err: result.err,
                 message: result.msg
@@ -181,23 +189,21 @@ router.delete("/:username", auth, async (req, res, next) => {
         }
     }
 
-    if(number_of_albums === albums.length && number_of_albums){
-        Users.findByIdAndRemove({_id: mongoose.Types.ObjectId(req.userData._id)}, (err) => {
-            if(err){
+    if (number_of_albums === albums.length && number_of_albums || (albums.length === 0)) {
+        Users.findByIdAndRemove({ _id: mongoose.Types.ObjectId(req.userData._id) }, (err) => {
+            if (err) {
                 return res.status(404).json({
                     message: "Cannot remove User, Please try again",
                     err
                 });
-            }
-            else{   
+            } else {
                 res.status(200).json({
                     message: "The User removed successfully"
                 });
                 next();
             }
         });
-    }
-    else{
+    } else {
         return res.status(404).json({
             message: "User not removed"
         });
