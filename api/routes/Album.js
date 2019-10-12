@@ -98,11 +98,14 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
 
 router.get("/:album_name", modauth, async(req, res, next) => {
 
-    let data;
-    if (req.login)
-        data = await Albums.find({ album_name: req.params.album_name, creator: req.userData._id }).sort({ _id: -1 });
-    else {
-        data = await Albums.find({ album_name: req.params.album_name }).sort({ _id: -1 });
+    const data = await Albums.find({ album_name: req.params.album_name }).sort({ id: -1 });
+
+    if (!req.login) {
+        if (data.private === true) {
+            return res.status(404).json({
+                message: "Auth Failed / login required"
+            });
+        }
     }
 
     if (data.length >= 1) {
