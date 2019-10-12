@@ -173,6 +173,13 @@ router.post("/:album_name/add", auth, upload.single("image"), async(req, res, ne
 router.get('/:album_name/like', auth, async(req, res, next) => {
 
     const Albumdata = await Albums.findOne({ album_name: req.params.album_name });
+
+    if (Albumdata.creator == req.userData._id) {
+        return res.status(404).json({
+            message: "You can not like your album"
+        });
+    }
+
     const like_user = await Albumdata.likes.includes(req.userData._id);
 
     if (like_user) {
