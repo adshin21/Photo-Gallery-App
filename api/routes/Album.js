@@ -56,8 +56,8 @@ router.post("/create", auth, upload.single("cover-photo"), async(req, res, next)
         });
     }
 
-    console.log(req.body);
-    console.log(req.file);
+    // console.log(req.body);
+    // console.log(req.file);
     if (req.body.album_name === null || req.body.album_name === undefined || req.file === null || req.file === undefined || req.body.private === null || req.body.private === undefined) {
         return res.status(404).json({
             message: "There is something missing, so that request can not proceed furthur"
