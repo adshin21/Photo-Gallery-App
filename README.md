@@ -33,6 +33,9 @@ All the routes regading to user will be _localhost:5000/user/somemethod_
 
 * Minimum eight in length
 
+![signup](image/signup.png)
+
+
 
 ### [login](https://github.com/adshin21/cc/blob/master/api/routes/User.js#L74)
 
@@ -49,6 +52,10 @@ This token will be set to every request headers to authunticate the requests.
 
 **Auth Required:** No
 
+![loginandtoken](image/loginandtoken.png)
+
+
+
 ### [delete](https://github.com/adshin21/cc/blob/master/api/routes/User.js#L113)
 
 **Method: Delete**
@@ -58,6 +65,7 @@ This token will be set to every request headers to authunticate the requests.
 **Response Status:** 200 if the delete is successfull
 
 **Auth Required:** Yes
+
 
 
 ---
@@ -83,3 +91,86 @@ The Album will have following properties
 **Respose:** It will list the album details and images containing inside it.
 
 **Auth Required:** If the album is private
+
+
+
+### [create](https://github.com/adshin21/cc/blob/master/api/routes/Album.js#L49)
+
+**Method: Post**
+
+**URL:** *localhost:5000/album/create*
+
+**Data:** A file data with cover_photo, album_name and private info.
+
+**Response Status:** 200
+
+**Respose:** It will create an album with desiresed attributes.
+
+**Auth Required:** Yes
+
+![add](image/create_album.png)
+
+
+### [add](https://github.com/adshin21/cc/blob/master/api/routes/Album.js#L125)
+
+**Method: Post**
+
+**URL:** *localhost:5000/album/:album_name/add*
+
+**Data:** A file (image) that will be added to that album.
+
+**Response Status:** 200
+
+**Respose:** It will add the image to that particular album.
+
+**Auth Required:** Yes
+
+![add](image/image_add.png)
+
+
+### [like](https://github.com/adshin21/cc/blob/master/api/routes/Album.js#L173)
+
+**Method: Get**
+
+**URL:** *localhost:5000/album/:album_name/like*
+
+**Data:** Not Required.
+
+**Response Status:** 200
+
+**Respose:** It will like that album if not liked before otherwise unlikes it.
+
+**Auth Required:** Yes
+
+![add](image/album_like.png)
+
+
+### [delete/album](https://github.com/adshin21/cc/blob/master/api/routes/Album.js#L270)
+
+**Method: Delete**
+
+**URL:** *localhost:5000/album/:album_id*
+
+**Data:** Not Required.
+
+**Response Status:** 200
+
+**Respose:** It will remove the album and it's images permanently.
+
+**Auth Required:** Yes
+
+
+### [delete/image](https://github.com/adshin21/cc/blob/master/api/routes/Album.js#L223)
+
+**Method: Delete**
+
+**URL:** *localhost:5000/album/:album_name/:image_id*
+
+**Data:** Not Required.
+
+**Response Status:** 200
+
+**Respose:** It will remove the particular album images permanently.
+
+**Auth Required:** Yes
+
